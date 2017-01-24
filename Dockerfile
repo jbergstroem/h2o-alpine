@@ -2,7 +2,7 @@ FROM alpine:3.5
 MAINTAINER Johan Bergström <bugs@bergstroem.nu>
 
 ENV URL     https://github.com/h2o/h2o.git
-ENV VERSION tags/v2.1.0-beta4
+ENV VERSION tags/v2.1.0
 ENV BUILD_OPTIONS -DCMAKE_INSTALL_SYSCONFDIR=/etc/h2o -DWITH_MRUBY=off
 
 RUN apk update \
@@ -22,7 +22,7 @@ RUN apk update \
     && rm -rf h2o \
     && apk del .build-deps \
     && rm -rf /var/cache/apk/* \
-    && mkdir /etc/h2o \
+    && mkdir /etc/h2o
 
 ADD h2o.conf /etc/h2o/
 WORKDIR /etc/h2o/
