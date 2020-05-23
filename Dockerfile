@@ -1,30 +1,21 @@
-FROM alpine:3.5
+FROM alpine:3.11 as builder
 MAINTAINER Johan Bergström <bugs@bergstroem.nu>
 
-ENV URL     https://github.com/h2o/h2o.git
-ENV VERSION tags/v2.1.0
-ENV BUILD_OPTIONS -DCMAKE_INSTALL_SYSCONFDIR=/etc/h2o -DWITH_MRUBY=off
+ARG BUILD_OPTIONS="-DCMAKE_INSTALL_SYSCONFDIR=/etc/h2o -DWITH_MRUBY=ON -DWITH_BUNDLED_SSL=OFF"
+ARG VERSION="2.2.6"
 
-RUN apk update \
-    && apk upgrade \
-    && apk add wslay libuv libstdc++ libgcc \
-    && apk add --virtual .build-deps \
-         build-base libressl-dev make wslay-dev libuv-dev \
-         cmake git linux-headers zlib-dev \
-    && git clone $URL h2o \
-    && cd h2o \
-    && git checkout $VERSION \
-    && cmake $BUILD_OPTIONS \
+WORKDIR /tmp/build
+
+RUN apk add --no-cache build-base cmake zlib-dev openssl-dev libuv-dev wslay-dev bison ruby
+RUN wget -q https://github.com/h2o/h2o/archive/v${VERSION}.tar.gz \
+    && tar --strip 1 -xzf v${VERSION}.tar.gz \
+    && cmake ${BUILD_OPTIONS} \
     && make \
-    && strip h2o \
-    && cp h2o /usr/sbin \
-    && cd .. \
-    && rm -rf h2o \
-    && apk del .build-deps \
-    && rm -rf /var/cache/apk/* \
-    && mkdir /etc/h2o
+    && strip h2o
 
-ADD h2o.conf /etc/h2o/
-WORKDIR /etc/h2o/
+FROM alpine:3.11 as h2o
+COPY --from=builder /tmp/build/h2o /usr/local/bin/h2o
+COPY h2o.conf /etc/h2o/h2o.conf
+RUN apk add --no-cache wslay zlib libstdc++
 EXPOSE 80 443
-CMD h2o 
+ENTRYPOINT ["h2o"]
