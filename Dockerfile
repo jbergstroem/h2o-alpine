@@ -15,7 +15,8 @@ RUN wget -q https://github.com/h2o/h2o/archive/v${VERSION}.tar.gz \
 
 FROM alpine:3.11 as h2o
 COPY --from=builder /tmp/build/h2o /usr/local/bin/h2o
+COPY --from=builder /usr/lib/libgcc*so* /usr/lib/libstdc*so* /usr/lib/
 COPY h2o.conf /etc/h2o/h2o.conf
-RUN apk add --no-cache wslay zlib libstdc++
+RUN apk add --no-cache wslay zlib tini
 EXPOSE 80 443
-ENTRYPOINT ["h2o"]
+ENTRYPOINT ["tini", "h2o"]
