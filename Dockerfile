@@ -10,7 +10,7 @@ RUN apk add --no-cache build-base cmake zlib-dev openssl-dev libuv-dev wslay-dev
 RUN wget -q https://github.com/h2o/h2o/archive/v${VERSION}.tar.gz \
     && tar --strip 1 -xzf v${VERSION}.tar.gz \
     && cmake ${BUILD_OPTIONS} \
-    && make \
+    && make -j $(nproc) \
     && strip h2o
 
 FROM alpine:3.11 as h2o
